@@ -1,0 +1,152 @@
+{% extends 'reminders/base.html' %}
+{% block title %}{{ medicine.name }}{% endblock %}
+{% block page_title %}Medicine Detail{% endblock %}
+{% block breadcrumb %}Home / Medicines / {{ medicine.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">💊 {{ medicine.name }}</h1>
+        {% if medicine.generic_name %}
+            <div class="page-subtitle">{{ medicine.generic_name }}</div>
+        {% endif %}
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'medicine_edit' medicine.pk %}" class="btn btn-primary">✏️ Edit</a>
+        <a href="{% url 'dosage_add' %}?medicine={{ medicine.pk }}" class="btn btn-purple">⚖️ Add Dosage</a>
+        <a href="{% url 'medicine_list' %}" class="btn btn-ghost">← Back</a>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Medicine Info -->
+    <div>
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+                <div class="card-title">Medicine Information</div>
+                <div style="width:14px;height:14px;border-radius:50%;background:{{ medicine.color_tag }};"></div>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="label">Category</span>
+                    <span class="value">
+                        <span class="badge badge-purple">{{ medicine.get_category_display }}</span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Manufacturer</span>
+                    <span class="value">{{ medicine.manufacturer|default:"—" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Prescription</span>
+                    <span class="value">{% if medicine.requires_prescription %}<span class="badge badge-amber">📋 Required</span>{% else %}Not Required{% endif %}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Added On</span>
+                    <span class="value">{{ medicine.created_at|date:"M j, Y" }}</span>
+                </div>
+
+                {% if medicine.description %}
+                <div style="margin-top:16px;">
+                    <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">DESCRIPTION</div>
+                    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;">{{ medicine.description }}</div>
+                </div>
+                {% endif %}
+
+                {% if medicine.side_effects %}
+                <div style="margin-top:16px;padding:14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;">⚠️ Side Effects</div>
+                    <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">{{ medicine.side_effects }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Dosages -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">⚖️ Dosages</div>
+                <a href="{% url 'dosage_add' %}?medicine={{ medicine.pk }}" class="btn btn-primary btn-sm">+ Add Dosage</a>
+            </div>
+            <div class="card-body" style="padding:0;">
+                {% if dosages %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Quantity</th>
+                            <th>Unit</th>
+                            <th>Instructions</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in dosages %}
+                        <tr>
+                            <td style="font-weight:700;color:var(--teal);font-size:18px;">{{ d.dose_quantity }}</td>
+                            <td><span class="badge badge-blue">{{ d.unit }}</span></td>
+                            <td>{{ d.instructions|default:"—" }}</td>
+                            <td style="font-size:12px;color:var(--text-muted);">{{ d.notes|default:"—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state" style="padding:30px;">
+                    <div class="empty-state-icon">⚖️</div>
+                    <div class="empty-state-title">No dosages yet</div>
+                    <a href="{% url 'dosage_add' %}?medicine={{ medicine.pk }}" class="btn btn-primary btn-sm" style="margin-top:10px;">Add Dosage</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedules using this medicine -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">📅 Active Schedules</div>
+            <span class="badge badge-teal">{{ schedules.count }}</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+            {% if schedules %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Dosage</th>
+                        <th>Frequency</th>
+                        <th>Times</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sch in schedules %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div class="avatar avatar-sm" style="background:{{ sch.user.avatar_color }};">{{ sch.user.get_initials }}</div>
+                                <a href="{% url 'user_detail' sch.user.pk %}" style="font-weight:600;color:var(--teal);">{{ sch.user.name }}</a>
+                            </div>
+                        </td>
+                        <td>{{ sch.dosage.dose_quantity }} {{ sch.dosage.unit }}</td>
+                        <td><span class="badge badge-purple">{{ sch.get_frequency_display }}</span></td>
+                        <td style="font-size:12px;">{{ sch.get_time_slots_display }}</td>
+                        <td>
+                            <span class="badge {% if sch.active %}badge-emerald{% else %}badge-red{% endif %}">
+                                {% if sch.active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state" style="padding:30px;">
+                <div class="empty-state-icon">📅</div>
+                <div class="empty-state-title">No schedules for this medicine</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

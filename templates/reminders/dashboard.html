@@ -1,0 +1,263 @@
+{% extends 'reminders/base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Home / Overview{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="stats-grid">
+    <div class="stat-card teal fade-in fade-in-1">
+        <div class="stat-icon">👥</div>
+        <div class="stat-info">
+            <div class="stat-value" data-target="{{ total_users }}">0</div>
+            <div class="stat-label">Active Patients</div>
+            <div class="stat-change up">↑ Registered users</div>
+        </div>
+    </div>
+    <div class="stat-card purple fade-in fade-in-2">
+        <div class="stat-icon">💊</div>
+        <div class="stat-info">
+            <div class="stat-value" data-target="{{ total_medicines }}">0</div>
+            <div class="stat-label">Medicines</div>
+            <div class="stat-change up">↑ In database</div>
+        </div>
+    </div>
+    <div class="stat-card amber fade-in fade-in-3">
+        <div class="stat-icon">📅</div>
+        <div class="stat-info">
+            <div class="stat-value" data-target="{{ active_schedules }}">0</div>
+            <div class="stat-label">Active Schedules</div>
+            <div class="stat-change up">↑ Ongoing</div>
+        </div>
+    </div>
+    <div class="stat-card emerald fade-in fade-in-4">
+        <div class="stat-icon">📈</div>
+        <div class="stat-info">
+            <div class="stat-value" data-target="{{ compliance_rate }}">0</div>
+            <div class="stat-label">Compliance Rate %</div>
+            <div class="stat-change {% if compliance_rate >= 70 %}up{% else %}down{% endif %}">
+                {% if compliance_rate >= 70 %}↑ Good{% else %}↓ Needs attention{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TODAY'S SUMMARY ROW -->
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Today's Status Cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;">
+        <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#6ee7b7;" data-target="{{ taken_today }}">0</div>
+            <div style="font-size:12px;color:#4a5780;margin-top:4px;">✅ Taken</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#fca5a5;" data-target="{{ missed_today }}">0</div>
+            <div style="font-size:12px;color:#4a5780;margin-top:4px;">❌ Missed</div>
+        </div>
+        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:14px;padding:18px;text-align:center;">
+            <div style="font-size:28px;font-weight:800;color:#93c5fd;" data-target="{{ pending_today }}">0</div>
+            <div style="font-size:12px;color:#4a5780;margin-top:4px;">⏳ Pending</div>
+        </div>
+    </div>
+
+    <!-- Compliance Ring -->
+    <div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:16px;padding:22px;display:flex;align-items:center;gap:24px;">
+        <div class="compliance-ring">
+            <svg viewBox="0 0 100 100" width="100" height="100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="url(#gradComp)" stroke-width="10"
+                    stroke-linecap="round"
+                    stroke-dasharray="264"
+                    stroke-dashoffset="{{ compliance_dashoffset|default:'264' }}"
+                    id="comp-circle"/>
+                <defs>
+                    <linearGradient id="gradComp" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#06b6d4"/>
+                        <stop offset="100%" style="stop-color:#8b5cf6"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <div class="compliance-text">
+                <div class="compliance-pct" id="comp-pct">{{ compliance_rate }}%</div>
+                <span class="compliance-label">Compliance</span>
+            </div>
+        </div>
+        <div>
+            <div style="font-size:18px;font-weight:800;color:var(--text-primary);">Today's Overview</div>
+            <div style="font-size:13px;color:var(--text-muted);margin-top:6px;">{{ today|date:"l, F j, Y" }}</div>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">
+                <div class="status-indicator status-active"><div class="status-dot"></div> {{ taken_today }} dose{{ taken_today|pluralize }} taken</div>
+                <div class="status-indicator status-inactive"><div class="status-dot"></div> {{ missed_today }} dose{{ missed_today|pluralize }} missed</div>
+            </div>
+            <a href="{% url 'generate_reminders' %}" class="btn btn-primary btn-sm" style="margin-top:14px;">⚡ Generate Today's</a>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN GRID: Today's Schedules + Recent Logs -->
+<div class="grid-2">
+    <!-- Today's Schedules -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <div class="card-title">📅 Today's Schedules</div>
+                <div class="card-subtitle">Active medicine schedules for today</div>
+            </div>
+            <a href="{% url 'schedule_list' %}" class="btn btn-ghost btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 16px;">
+            {% if todays_schedules %}
+                {% for sch in todays_schedules %}
+                <div class="schedule-item">
+                    <div class="avatar avatar-sm" style="background:{{ sch.dosage.medicine.color_tag }};">
+                        {{ sch.dosage.medicine.name|first }}
+                    </div>
+                    <div class="schedule-item-info">
+                        <div class="schedule-item-name">{{ sch.dosage.medicine.name }}</div>
+                        <div class="schedule-item-patient">👤 {{ sch.user.name }} · {{ sch.dosage.dose_quantity }} {{ sch.dosage.unit }}</div>
+                    </div>
+                    <div>
+                        <span class="badge badge-teal" style="font-size:10px;">{{ sch.get_frequency_display }}</span>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;text-align:right;">
+                            {% for t in sch.time_slots %}🕐 {{ t }}{% if not forloop.last %} {% endif %}{% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state" style="padding:30px;">
+                    <div class="empty-state-icon">📅</div>
+                    <div class="empty-state-title">No active schedules</div>
+                    <div class="empty-state-desc">Create a schedule to see it here</div>
+                    <a href="{% url 'schedule_add' %}" class="btn btn-primary btn-sm" style="margin-top:14px;">Create Schedule</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Logs -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <div class="card-title">📋 Recent Activity</div>
+                <div class="card-subtitle">Latest reminder log entries</div>
+            </div>
+            <a href="{% url 'log_list' %}" class="btn btn-ghost btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 12px 16px;">
+            {% if recent_logs %}
+                {% for log in recent_logs %}
+                <div class="log-item">
+                    <div class="log-dot {{ log.status }}"></div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            {{ log.schedule.dosage.medicine.name }}
+                        </div>
+                        <div style="font-size:11px;color:var(--text-muted);">
+                            👤 {{ log.schedule.user.name }} · {{ log.scheduled_time|date:"M j, g:i A" }}
+                        </div>
+                    </div>
+                    <span class="badge
+                        {% if log.status == 'taken' %}badge-emerald
+                        {% elif log.status == 'missed' %}badge-red
+                        {% elif log.status == 'skipped' %}badge-amber
+                        {% else %}badge-blue{% endif %}">
+                        {% if log.status == 'taken' %}✅{% elif log.status == 'missed' %}❌{% elif log.status == 'skipped' %}⏭️{% else %}⏳{% endif %}
+                        {{ log.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state" style="padding:30px;">
+                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-title">No activity yet</div>
+                    <div class="empty-state-desc">Generate today's reminders to start tracking</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- RECENT PATIENTS -->
+<div class="card fade-in" style="margin-top:24px;">
+    <div class="card-header">
+        <div>
+            <div class="card-title">👥 Recent Patients</div>
+            <div class="card-subtitle">Newly registered patients</div>
+        </div>
+        <a href="{% url 'user_list' %}" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding:0;">
+        {% if recent_users %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Contact</th>
+                        <th>Age / Gender</th>
+                        <th>Blood Group</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                    <tr>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div class="avatar avatar-sm" style="background:{{ u.avatar_color }};">{{ u.get_initials }}</div>
+                                <div>
+                                    <div style="font-weight:600;color:var(--text-primary);">{{ u.name }}</div>
+                                    <div style="font-size:11px;color:var(--text-muted);">{{ u.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ u.phone|default:"—" }}</td>
+                        <td>{{ u.age|default:"—" }}{% if u.age %} yrs{% endif %}{% if u.gender %} · {{ u.get_gender_display }}{% endif %}</td>
+                        <td>{{ u.blood_group|default:"—" }}</td>
+                        <td>
+                            <span class="status-indicator {% if u.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                <span class="status-dot"></span>
+                                {% if u.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display:flex;gap:6px;">
+                                <a href="{% url 'user_detail' u.pk %}" class="btn btn-ghost btn-xs">View</a>
+                                <a href="{% url 'user_edit' u.pk %}" class="btn btn-ghost btn-xs">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">👥</div>
+                <div class="empty-state-title">No patients yet</div>
+                <div class="empty-state-desc">Add your first patient to get started</div>
+                <a href="{% url 'user_add' %}" class="btn btn-primary" style="margin-top:16px;">Add First Patient</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Animate compliance ring on load
+window.addEventListener('load', () => {
+    const rate = {{ compliance_rate }};
+    const circle = document.getElementById('comp-circle');
+    if (circle) {
+        const circumference = 264;
+        const offset = circumference - (rate / 100) * circumference;
+        circle.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)';
+        setTimeout(() => { circle.style.strokeDashoffset = offset; }, 300);
+    }
+});
+</script>
+{% endblock %}

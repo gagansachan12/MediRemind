@@ -1,0 +1,24 @@
+{% extends 'reminders/base.html' %}
+{% block title %}Confirm Delete{% endblock %}
+{% block page_title %}Confirm Delete{% endblock %}
+{% block breadcrumb %}Home / Delete{% endblock %}
+
+{% block content %}
+<div class="confirm-card">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Delete {{ type }}</div>
+    <div class="confirm-desc">
+        Are you sure you want to delete
+        <strong style="color:var(--text-primary);">"{{ object }}"</strong>?<br><br>
+        <span style="color:var(--red);">⚠️ This action cannot be undone.</span>
+        {% if type == 'Patient' %}All associated schedules and logs will also be deleted.{% endif %}
+        {% if type == 'Medicine' %}All associated dosages and schedules will also be deleted.{% endif %}
+        {% if type == 'Schedule' %}All associated reminder logs will also be deleted.{% endif %}
+    </div>
+    <form method="post" style="display:flex;gap:12px;justify-content:center;">
+        {% csrf_token %}
+        <a href="javascript:history.back()" class="btn btn-ghost">← Cancel</a>
+        <button type="submit" class="btn btn-danger">🗑️ Delete {{ type }}</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends 'reminders/base.html' %}
+{% block title %}{{ user_obj.name }}{% endblock %}
+{% block page_title %}Patient Detail{% endblock %}
+{% block breadcrumb %}Home / Patients / {{ user_obj.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Patient Profile</h1>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'user_edit' user_obj.pk %}" class="btn btn-primary">✏️ Edit</a>
+        <a href="{% url 'schedule_add' %}" class="btn btn-purple">📅 Add Schedule</a>
+        <a href="{% url 'user_list' %}" class="btn btn-ghost">← Back</a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Profile Card -->
+    <div class="detail-profile">
+        <div class="detail-avatar" style="background: {{ user_obj.avatar_color }};">{{ user_obj.get_initials }}</div>
+        <div class="detail-name">{{ user_obj.name }}</div>
+        <div class="detail-email">{{ user_obj.email }}</div>
+        <div style="margin-top:10px;">
+            <span class="status-indicator {% if user_obj.is_active %}status-active{% else %}status-inactive{% endif %}">
+                <span class="status-dot"></span>
+                {% if user_obj.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+        </div>
+
+        <div class="detail-stats">
+            <div class="detail-stat">
+                <div class="detail-stat-val">{{ schedules.count }}</div>
+                <div class="detail-stat-label">Schedules</div>
+            </div>
+            <div class="detail-stat">
+                <div class="detail-stat-val" style="color:var(--emerald);">{{ compliance }}%</div>
+                <div class="detail-stat-label">Compliance</div>
+            </div>
+        </div>
+
+        <div style="margin-top:20px;text-align:left;">
+            <div class="info-row">
+                <span class="label">📞 Phone</span>
+                <span class="value">{{ user_obj.phone|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">🎂 Age</span>
+                <span class="value">{% if user_obj.age %}{{ user_obj.age }} years{% else %}—{% endif %}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">⚧ Gender</span>
+                <span class="value">{{ user_obj.get_gender_display|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">🩸 Blood Group</span>
+                <span class="value">{{ user_obj.blood_group|default:"—" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">📅 Joined</span>
+                <span class="value">{{ user_obj.created_at|date:"M j, Y" }}</span>
+            </div>
+        </div>
+
+        {% if user_obj.medical_notes %}
+        <div style="margin-top:16px;padding:14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px;">📋 Medical Notes</div>
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">{{ user_obj.medical_notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Content -->
+    <div>
+        <!-- Schedules -->
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-header">
+                <div class="card-title">📅 Medicine Schedules</div>
+                <a href="{% url 'schedule_add' %}" class="btn btn-primary btn-sm">+ Add Schedule</a>
+            </div>
+            <div class="card-body" style="padding:0;">
+                {% if schedules %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Dosage</th>
+                            <th>Frequency</th>
+                            <th>Time Slots</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sch in schedules %}
+                        <tr>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div style="width:10px;height:10px;border-radius:50%;background:{{ sch.dosage.medicine.color_tag }};flex-shrink:0;"></div>
+                                    <span style="font-weight:600;color:var(--text-primary);">{{ sch.dosage.medicine.name }}</span>
+                                </div>
+                            </td>
+                            <td>{{ sch.dosage.dose_quantity }} {{ sch.dosage.unit }}</td>
+                            <td><span class="badge badge-teal">{{ sch.get_frequency_display }}</span></td>
+                            <td>{{ sch.get_time_slots_display }}</td>
+                            <td>
+                                {{ sch.start_date|date:"M j" }}
+                                {% if sch.end_date %} → {{ sch.end_date|date:"M j, Y" }}{% else %} → Ongoing{% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if sch.active %}badge-emerald{% else %}badge-red{% endif %}">
+                                    {% if sch.active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:5px;">
+                                    <a href="{% url 'schedule_edit' sch.pk %}" class="btn btn-ghost btn-xs">Edit</a>
+                                    <a href="{% url 'schedule_delete' sch.pk %}" class="btn btn-ghost btn-xs" style="color:var(--red);">Del</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state" style="padding:30px;">
+                    <div class="empty-state-icon">📅</div>
+                    <div class="empty-state-title">No schedules yet</div>
+                    <a href="{% url 'schedule_add' %}" class="btn btn-primary btn-sm" style="margin-top:10px;">Create First Schedule</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Logs -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📋 Recent Reminder Logs</div>
+                <a href="{% url 'log_list' %}" class="btn btn-ghost btn-sm">View All</a>
+            </div>
+            <div class="card-body" style="padding:0;">
+                {% if logs %}
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Medicine</th>
+                            <th>Scheduled Time</th>
+                            <th>Taken At</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr id="log-row-{{ log.pk }}">
+                            <td style="font-weight:600;color:var(--text-primary);">{{ log.schedule.dosage.medicine.name }}</td>
+                            <td>{{ log.scheduled_time|date:"M j, g:i A" }}</td>
+                            <td>{% if log.taken_at %}{{ log.taken_at|date:"M j, g:i A" }}{% else %}—{% endif %}</td>
+                            <td class="log-status">
+                                <span class="badge
+                                    {% if log.status == 'taken' %}badge-emerald
+                                    {% elif log.status == 'missed' %}badge-red
+                                    {% elif log.status == 'skipped' %}badge-amber
+                                    {% else %}badge-blue{% endif %}">
+                                    {% if log.status == 'taken' %}✅{% elif log.status == 'missed' %}❌{% elif log.status == 'skipped' %}⏭️{% else %}⏳{% endif %}
+                                    {{ log.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state" style="padding:30px;">
+                    <div class="empty-state-icon">📋</div>
+                    <div class="empty-state-title">No logs yet</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

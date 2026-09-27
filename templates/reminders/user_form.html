@@ -1,0 +1,86 @@
+{% extends 'reminders/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}Home / Patients / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="page-header" style="margin-bottom:20px;">
+        <div>
+            <h1 class="page-title">{% if user_obj %}✏️{% else %}➕{% endif %} {{ title }}</h1>
+            <div class="page-subtitle">{% if user_obj %}Update patient information{% else %}Register a new patient in the system{% endif %}</div>
+        </div>
+        <a href="{% url 'user_list' %}" class="btn btn-ghost">← Back to Patients</a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Personal Info -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">👤</span> Personal Information</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="id_name">Full Name <span class="required">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_email">Email Address <span class="required">*</span></label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_phone">Phone Number</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_age">Age</label>
+                    {{ form.age }}
+                    {% if form.age.errors %}<div class="form-error">{{ form.age.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_gender">Gender</label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}<div class="form-error">{{ form.gender.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_blood_group">Blood Group</label>
+                    {{ form.blood_group }}
+                    {% if form.blood_group.errors %}<div class="form-error">{{ form.blood_group.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">🎨</span> Avatar Color</div>
+            <div class="form-group" style="max-width:300px;">
+                <label class="form-label" for="id_avatar_color">Choose Avatar Color</label>
+                {{ form.avatar_color }}
+                <div class="form-hint">This color will appear as the patient's profile avatar.</div>
+            </div>
+        </div>
+
+        <!-- Medical Notes -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">📋</span> Medical Notes</div>
+            <div class="form-group">
+                <label class="form-label" for="id_medical_notes">Notes / Allergies / Special Instructions</label>
+                {{ form.medical_notes }}
+            </div>
+            <div class="form-check" style="margin-top:12px;">
+                {{ form.is_active }}
+                <label class="form-label" for="id_is_active" style="margin:0;cursor:pointer;">Mark as Active Patient</label>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <a href="{% url 'user_list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ action }}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

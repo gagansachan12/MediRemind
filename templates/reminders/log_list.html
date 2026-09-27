@@ -1,0 +1,137 @@
+{% extends 'reminders/base.html' %}
+{% block title %}Reminder Logs{% endblock %}
+{% block page_title %}Reminder Logs{% endblock %}
+{% block breadcrumb %}Home / Logs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1 class="page-title">📋 Reminder Logs</h1>
+        <div class="page-subtitle">Track medicine intake activity</div>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'generate_reminders' %}" class="btn btn-amber">⚡ Generate Today's</a>
+    </div>
+</div>
+
+<!-- STATUS SUMMARY CARDS -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;">
+    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:14px;padding:18px;text-align:center;cursor:pointer;"
+         onclick="document.querySelector('[name=status][value=taken]').selected=true;document.querySelector('form.log-filter').submit()">
+        <div style="font-size:28px;font-weight:800;color:#6ee7b7;" data-target="{{ taken }}">0</div>
+        <div style="font-size:12px;color:#4a5780;margin-top:4px;">✅ Taken</div>
+    </div>
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:14px;padding:18px;text-align:center;cursor:pointer;"
+         onclick="document.querySelector('[name=status][value=missed]').selected=true;document.querySelector('form.log-filter').submit()">
+        <div style="font-size:28px;font-weight:800;color:#fca5a5;" data-target="{{ missed }}">0</div>
+        <div style="font-size:12px;color:#4a5780;margin-top:4px;">❌ Missed</div>
+    </div>
+    <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:14px;padding:18px;text-align:center;cursor:pointer;"
+         onclick="document.querySelector('[name=status][value=pending]').selected=true;document.querySelector('form.log-filter').submit()">
+        <div style="font-size:28px;font-weight:800;color:#93c5fd;" data-target="{{ pending }}">0</div>
+        <div style="font-size:12px;color:#4a5780;margin-top:4px;">⏳ Pending</div>
+    </div>
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:14px;padding:18px;text-align:center;cursor:pointer;"
+         onclick="document.querySelector('[name=status][value=skipped]').selected=true;document.querySelector('form.log-filter').submit()">
+        <div style="font-size:28px;font-weight:800;color:#fcd34d;" data-target="{{ skipped }}">0</div>
+        <div style="font-size:12px;color:#4a5780;margin-top:4px;">⏭️ Skipped</div>
+    </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="search-bar">
+    <form method="get" class="log-filter" style="display:flex;gap:10px;flex-wrap:wrap;width:100%;">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" value="{{ query }}" class="search-input" placeholder="Search by patient or medicine...">
+        </div>
+        <select name="status" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="taken" {% if status_filter == 'taken' %}selected{% endif %}>✅ Taken</option>
+            <option value="missed" {% if status_filter == 'missed' %}selected{% endif %}>❌ Missed</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>⏳ Pending</option>
+            <option value="skipped" {% if status_filter == 'skipped' %}selected{% endif %}>⏭️ Skipped</option>
+        </select>
+        <button type="submit" class="btn btn-ghost">Search</button>
+        {% if query or status_filter %}
+            <a href="{% url 'log_list' %}" class="btn btn-ghost">✕ Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if logs %}
+<div class="card">
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Scheduled Time</th>
+                    <th>Taken At</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr id="log-row-{{ log.pk }}" class="fade-in">
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="avatar avatar-sm" style="background:{{ log.schedule.user.avatar_color }};">{{ log.schedule.user.get_initials }}</div>
+                            <a href="{% url 'user_detail' log.schedule.user.pk %}" style="font-weight:600;color:var(--teal);">{{ log.schedule.user.name }}</a>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:7px;">
+                            <div style="width:9px;height:9px;border-radius:50%;background:{{ log.schedule.dosage.medicine.color_tag }};flex-shrink:0;"></div>
+                            <span style="font-weight:600;color:var(--text-primary);">{{ log.schedule.dosage.medicine.name }}</span>
+                        </div>
+                    </td>
+                    <td>{{ log.schedule.dosage.dose_quantity }} {{ log.schedule.dosage.unit }}</td>
+                    <td>{{ log.scheduled_time|date:"M j, Y g:i A" }}</td>
+                    <td>{% if log.taken_at %}{{ log.taken_at|date:"M j, g:i A" }}{% else %}<span style="color:var(--text-muted);">—</span>{% endif %}</td>
+                    <td class="log-status">
+                        <span class="badge
+                            {% if log.status == 'taken' %}badge-emerald
+                            {% elif log.status == 'missed' %}badge-red
+                            {% elif log.status == 'skipped' %}badge-amber
+                            {% else %}badge-blue{% endif %}">
+                            {% if log.status == 'taken' %}✅{% elif log.status == 'missed' %}❌{% elif log.status == 'skipped' %}⏭️{% else %}⏳{% endif %}
+                            {{ log.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if log.status != 'taken' %}
+                        <div style="display:flex;gap:4px;">
+                            <button class="btn btn-xs" style="background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);"
+                                data-log-id="{{ log.pk }}" data-status="taken">✅ Taken</button>
+                            <button class="btn btn-xs" style="background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);"
+                                data-log-id="{{ log.pk }}" data-status="missed">❌ Missed</button>
+                            <button class="btn btn-xs" style="background:rgba(245,158,11,0.12);color:#fcd34d;border:1px solid rgba(245,158,11,0.25);"
+                                data-log-id="{{ log.pk }}" data-status="skipped">⏭️ Skip</button>
+                        </div>
+                        {% else %}
+                            <span style="font-size:12px;color:var(--text-muted);">Done</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📋</div>
+    <div class="empty-state-title">No reminder logs found</div>
+    <div class="empty-state-desc">
+        {% if query or status_filter %}No results for current filter.{% else %}Generate today's reminders to start tracking.{% endif %}
+    </div>
+    {% if not query and not status_filter %}
+        <a href="{% url 'generate_reminders' %}" class="btn btn-amber" style="margin-top:16px;">⚡ Generate Today's Reminders</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

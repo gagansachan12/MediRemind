@@ -1,0 +1,124 @@
+{% extends 'reminders/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}Home / Schedules / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="form-page" style="max-width:860px;">
+    <div class="page-header" style="margin-bottom:20px;">
+        <div>
+            <h1 class="page-title">📅 {{ title }}</h1>
+            <div class="page-subtitle">Assign medicine dosage and time reminders to a patient</div>
+        </div>
+        <a href="{% url 'schedule_list' %}" class="btn btn-ghost">← Back to Schedules</a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Patient & Medicine -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">👤</span> Patient & Medicine</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="id_user">Patient <span class="required">*</span></label>
+                    {{ form.user }}
+                    {% if form.user.errors %}<div class="form-error">{{ form.user.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_dosage">Medicine & Dosage <span class="required">*</span></label>
+                    {{ form.dosage }}
+                    {% if form.dosage.errors %}<div class="form-error">{{ form.dosage.errors.0 }}</div>{% endif %}
+                    <div class="form-hint">Select from available dosages. <a href="{% url 'dosage_add' %}" style="color:var(--teal);">Add new dosage →</a></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_prescribed_by">Prescribed By</label>
+                    {{ form.prescribed_by }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_frequency">Frequency <span class="required">*</span></label>
+                    {{ form.frequency }}
+                    {% if form.frequency.errors %}<div class="form-error">{{ form.frequency.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Slots -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">🕐</span> Reminder Times</div>
+            <div class="form-group">
+                <label class="form-label">Select Time Slots <span class="required">*</span></label>
+                <div class="form-hint" style="margin-bottom:10px;">Choose the times when the patient should take this medicine</div>
+                {% if form.time_slots.errors %}<div class="form-error">{{ form.time_slots.errors.0 }}</div>{% endif %}
+
+                <div class="time-checkbox-grid">
+                    {% for choice in form.time_slots %}
+                    <label class="time-checkbox-label" for="{{ choice.id_for_label }}">
+                        {{ choice.tag }}
+                        <span>{{ choice.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Duration -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">📆</span> Duration</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="id_start_date">Start Date <span class="required">*</span></label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}<div class="form-error">{{ form.start_date.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_end_date">End Date <span style="color:var(--text-muted);font-weight:400;">(leave blank for ongoing)</span></label>
+                    {{ form.end_date }}
+                </div>
+            </div>
+            <div class="form-check" style="margin-top:12px;">
+                {{ form.active }}
+                <label class="form-label" for="id_active" style="margin:0;cursor:pointer;">Mark as Active Schedule</label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'schedule_list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ action }}</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.time-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 13px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+    color: var(--text-secondary);
+    user-select: none;
+}
+.time-checkbox-label:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+    background: rgba(6,182,212,0.05);
+}
+.time-checkbox-label input[type="checkbox"] {
+    accent-color: var(--teal);
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+.time-checkbox-label:has(input:checked) {
+    background: rgba(6,182,212,0.12);
+    border-color: var(--teal);
+    color: var(--teal);
+}
+</style>
+{% endblock %}

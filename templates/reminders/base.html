@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MediRemind – Smart Medicine Reminder System for tracking patient medications and schedules.">
+    <title>{% block title %}MediRemind{% endblock %} | Medicine Reminder System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💊</text></svg>">
+</head>
+<body>
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">💊</div>
+            <div class="logo-text">
+                <span class="logo-title">MediRemind</span>
+                <span class="logo-sub">Reminder System</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Overview</div>
+            <div class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
+            <div class="nav-section-label" style="margin-top:8px;">Patients</div>
+            <div class="nav-item">
+                <a href="{% url 'user_list' %}" class="nav-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    <span>All Patients</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'user_add' %}" class="nav-link {% if request.resolver_match.url_name == 'user_add' %}active{% endif %}">
+                    <span class="nav-icon">➕</span>
+                    <span>Add Patient</span>
+                </a>
+            </div>
+
+            <div class="nav-section-label" style="margin-top:8px;">Medicines</div>
+            <div class="nav-item">
+                <a href="{% url 'medicine_list' %}" class="nav-link {% if 'medicine' in request.resolver_match.url_name %}active{% endif %}">
+                    <span class="nav-icon">💊</span>
+                    <span>All Medicines</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'medicine_add' %}" class="nav-link {% if request.resolver_match.url_name == 'medicine_add' %}active{% endif %}">
+                    <span class="nav-icon">🧪</span>
+                    <span>Add Medicine</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'dosage_add' %}" class="nav-link {% if request.resolver_match.url_name == 'dosage_add' %}active{% endif %}">
+                    <span class="nav-icon">⚖️</span>
+                    <span>Add Dosage</span>
+                </a>
+            </div>
+
+            <div class="nav-section-label" style="margin-top:8px;">Schedules</div>
+            <div class="nav-item">
+                <a href="{% url 'schedule_list' %}" class="nav-link {% if 'schedule' in request.resolver_match.url_name %}active{% endif %}">
+                    <span class="nav-icon">📅</span>
+                    <span>Schedules</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'schedule_add' %}" class="nav-link {% if request.resolver_match.url_name == 'schedule_add' %}active{% endif %}">
+                    <span class="nav-icon">🗓️</span>
+                    <span>Create Schedule</span>
+                </a>
+            </div>
+
+            <div class="nav-section-label" style="margin-top:8px;">Activity</div>
+            <div class="nav-item">
+                <a href="{% url 'log_list' %}" class="nav-link {% if 'log' in request.resolver_match.url_name %}active{% endif %}">
+                    <span class="nav-icon">📋</span>
+                    <span>Reminder Logs</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="{% url 'generate_reminders' %}" class="nav-link">
+                    <span class="nav-icon">⚡</span>
+                    <span>Generate Today's</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/admin/" class="admin-link" target="_blank">
+                <span>⚙️</span>
+                <span>Django Admin Panel</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- TOP BAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+                <div class="topbar-breadcrumb">{% block breadcrumb %}Home{% endblock %}</div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-time" id="live-clock">--:--:--</div>
+                <a href="{% url 'user_add' %}" class="topbar-btn">
+                    <span>➕</span> Add Patient
+                </a>
+                <a href="{% url 'schedule_add' %}" class="topbar-btn">
+                    <span>📅</span> Schedule
+                </a>
+                <a href="/admin/" class="topbar-btn" target="_blank">
+                    <span>⚙️</span> Admin
+                </a>
+            </div>
+        </header>
+
+        <!-- MESSAGES -->
+        <div style="padding: 0 28px;">
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% else %}info{% endif %}">
+                    {% if message.tags == 'success' %}✅{% elif message.tags == 'error' %}❌{% else %}ℹ️{% endif %}
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- PAGE CONTENT -->
+        <main class="page-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

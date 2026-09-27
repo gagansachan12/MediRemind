@@ -1,0 +1,127 @@
+{% extends 'reminders/base.html' %}
+{% block title %}Schedules{% endblock %}
+{% block page_title %}Schedules{% endblock %}
+{% block breadcrumb %}Home / Schedules{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1 class="page-title">📅 Medicine Schedules</h1>
+        <div class="page-subtitle">{{ total }} schedule{{ total|pluralize }} configured</div>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'schedule_add' %}" class="btn btn-primary">➕ Create Schedule</a>
+    </div>
+</div>
+
+<!-- SEARCH & FILTER -->
+<div class="search-bar">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;width:100%;">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" value="{{ query }}" class="search-input" placeholder="Search by patient or medicine...">
+        </div>
+        <select name="active" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Schedules</option>
+            <option value="true" {% if active_filter == 'true' %}selected{% endif %}>Active Only</option>
+            <option value="false" {% if active_filter == 'false' %}selected{% endif %}>Inactive Only</option>
+        </select>
+        <button type="submit" class="btn btn-ghost">Search</button>
+        {% if query or active_filter %}
+            <a href="{% url 'schedule_list' %}" class="btn btn-ghost">✕ Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if schedules %}
+<div class="card">
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Medicine</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Time Slots</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Prescribed By</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sch in schedules %}
+                <tr class="fade-in">
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div class="avatar avatar-sm" style="background:{{ sch.user.avatar_color }};">{{ sch.user.get_initials }}</div>
+                            <div>
+                                <a href="{% url 'user_detail' sch.user.pk %}" style="font-weight:600;color:var(--teal);">{{ sch.user.name }}</a>
+                                <div style="font-size:11px;color:var(--text-muted);">{{ sch.user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="width:10px;height:10px;border-radius:50%;background:{{ sch.dosage.medicine.color_tag }};flex-shrink:0;"></div>
+                            <a href="{% url 'medicine_detail' sch.dosage.medicine.pk %}" style="font-weight:600;color:var(--text-primary);">
+                                {{ sch.dosage.medicine.name }}
+                            </a>
+                        </div>
+                        <div style="font-size:11px;color:var(--text-muted);">{{ sch.dosage.medicine.get_category_display }}</div>
+                    </td>
+                    <td>
+                        <span style="font-weight:700;color:var(--teal);">{{ sch.dosage.dose_quantity }}</span>
+                        <span style="font-size:12px;color:var(--text-muted);">{{ sch.dosage.unit }}</span>
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if sch.frequency == 'daily' %}badge-teal
+                            {% elif sch.frequency == 'twice_daily' %}badge-purple
+                            {% elif sch.frequency == 'thrice_daily' %}badge-amber
+                            {% elif sch.frequency == 'weekly' %}badge-emerald
+                            {% elif sch.frequency == 'alternate' %}badge-blue
+                            {% else %}badge-gray{% endif %}">
+                            {{ sch.get_frequency_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size:12px;color:var(--teal);font-weight:600;">
+                            {% for t in sch.time_slots %}🕐 {{ t }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                        </div>
+                    </td>
+                    <td>{{ sch.start_date|date:"M j, Y" }}</td>
+                    <td>{% if sch.end_date %}{{ sch.end_date|date:"M j, Y" }}{% else %}<span style="color:var(--text-muted);">Ongoing</span>{% endif %}</td>
+                    <td>{{ sch.prescribed_by|default:"—" }}</td>
+                    <td>
+                        <span class="badge {% if sch.active %}badge-emerald{% else %}badge-red{% endif %}">
+                            {% if sch.active %}● Active{% else %}● Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display:flex;gap:5px;">
+                            <a href="{% url 'schedule_edit' sch.pk %}" class="btn btn-ghost btn-xs">Edit</a>
+                            <a href="{% url 'schedule_delete' sch.pk %}" class="btn btn-ghost btn-xs" style="color:var(--red);">Del</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">📅</div>
+    <div class="empty-state-title">No schedules found</div>
+    <div class="empty-state-desc">
+        {% if query %}No results for "{{ query }}".{% else %}Create a schedule to assign medicines to patients.{% endif %}
+    </div>
+    {% if not query %}
+        <a href="{% url 'schedule_add' %}" class="btn btn-primary" style="margin-top:16px;">Create First Schedule</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

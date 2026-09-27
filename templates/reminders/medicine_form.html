@@ -1,0 +1,76 @@
+{% extends 'reminders/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}Home / Medicines / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="page-header" style="margin-bottom:20px;">
+        <div>
+            <h1 class="page-title">{% if med %}✏️{% else %}➕{% endif %} {{ title }}</h1>
+            <div class="page-subtitle">{% if med %}Update medicine information{% else %}Add a new medicine to the system{% endif %}</div>
+        </div>
+        <a href="{% url 'medicine_list' %}" class="btn btn-ghost">← Back to Medicines</a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <!-- Medicine Details -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">💊</span> Medicine Details</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label" for="id_name">Brand Name <span class="required">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="form-error">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_generic_name">Generic / Chemical Name</label>
+                    {{ form.generic_name }}
+                    {% if form.generic_name.errors %}<div class="form-error">{{ form.generic_name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_category">Category <span class="required">*</span></label>
+                    {{ form.category }}
+                    {% if form.category.errors %}<div class="form-error">{{ form.category.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_manufacturer">Manufacturer</label>
+                    {{ form.manufacturer }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_color_tag">Color Tag</label>
+                    {{ form.color_tag }}
+                    <div class="form-hint">Used for visual identification in the system</div>
+                </div>
+                <div class="form-group" style="justify-content:flex-end;">
+                    <div class="form-check" style="margin-top:auto;padding-bottom:10px;">
+                        {{ form.requires_prescription }}
+                        <label class="form-label" for="id_requires_prescription" style="margin:0;cursor:pointer;">Requires Prescription (Rx)</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">📄</span> Description & Side Effects</div>
+            <div class="form-group" style="margin-bottom:16px;">
+                <label class="form-label" for="id_description">Description</label>
+                {{ form.description }}
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="id_side_effects">Known Side Effects</label>
+                {{ form.side_effects }}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <a href="{% url 'medicine_list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ action }}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

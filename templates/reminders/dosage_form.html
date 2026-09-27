@@ -1,0 +1,54 @@
+{% extends 'reminders/base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block breadcrumb %}Home / Dosages / {{ title }}{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="page-header" style="margin-bottom:20px;">
+        <div>
+            <h1 class="page-title">⚖️ {{ title }}</h1>
+            <div class="page-subtitle">Define a dosage amount and instructions for a medicine</div>
+        </div>
+        <a href="{% url 'medicine_list' %}" class="btn btn-ghost">← Back to Medicines</a>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-section">
+            <div class="form-section-title"><span class="section-icon">⚖️</span> Dosage Details</div>
+            <div class="form-grid">
+                <div class="form-group form-full">
+                    <label class="form-label" for="id_medicine">Medicine <span class="required">*</span></label>
+                    {{ form.medicine }}
+                    {% if form.medicine.errors %}<div class="form-error">{{ form.medicine.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_dose_quantity">Dose Quantity <span class="required">*</span></label>
+                    {{ form.dose_quantity }}
+                    {% if form.dose_quantity.errors %}<div class="form-error">{{ form.dose_quantity.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_unit">Unit <span class="required">*</span></label>
+                    {{ form.unit }}
+                    {% if form.unit.errors %}<div class="form-error">{{ form.unit.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="form-group form-full">
+                    <label class="form-label" for="id_instructions">Instructions</label>
+                    {{ form.instructions }}
+                    <div class="form-hint">e.g. "Take after food", "Take with plenty of water"</div>
+                </div>
+                <div class="form-group form-full">
+                    <label class="form-label" for="id_notes">Additional Notes</label>
+                    {{ form.notes }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'medicine_list' %}" class="btn btn-ghost">Cancel</a>
+            <button type="submit" class="btn btn-primary">{{ action }}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

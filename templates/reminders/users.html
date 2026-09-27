@@ -1,0 +1,86 @@
+{% extends 'reminders/base.html' %}
+{% block title %}Patients{% endblock %}
+{% block page_title %}Patients{% endblock %}
+{% block breadcrumb %}Home / Patients{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-left">
+        <h1 class="page-title">👥 All Patients</h1>
+        <div class="page-subtitle">{{ total }} patient{{ total|pluralize }} registered in the system</div>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'user_add' %}" class="btn btn-primary">➕ Add Patient</a>
+    </div>
+</div>
+
+<!-- SEARCH & FILTER -->
+<div class="search-bar">
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;width:100%;">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" value="{{ query }}" class="search-input" placeholder="Search by name, email, phone...">
+        </div>
+        <select name="status" class="filter-select" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button type="submit" class="btn btn-ghost">Search</button>
+        {% if query or status_filter %}
+            <a href="{% url 'user_list' %}" class="btn btn-ghost">✕ Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if users %}
+<div class="grid-auto">
+    {% for user in users %}
+    <div class="user-card fade-in">
+        <div class="avatar avatar-lg" style="background: {{ user.avatar_color }};">{{ user.get_initials }}</div>
+        <div class="user-card-info">
+            <div class="user-card-name">{{ user.name }}</div>
+            <div class="user-card-email">{{ user.email }}</div>
+            <div class="user-card-meta">
+                {% if user.age %}
+                    <span class="badge badge-gray">{{ user.age }} yrs</span>
+                {% endif %}
+                {% if user.gender %}
+                    <span class="badge badge-blue">{{ user.get_gender_display }}</span>
+                {% endif %}
+                {% if user.blood_group %}
+                    <span class="badge badge-red">🩸 {{ user.blood_group }}</span>
+                {% endif %}
+                <span class="badge {% if user.is_active %}badge-emerald{% else %}badge-red{% endif %}">
+                    {% if user.is_active %}● Active{% else %}● Inactive{% endif %}
+                </span>
+            </div>
+            {% if user.phone %}
+                <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">📞 {{ user.phone }}</div>
+            {% endif %}
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+                📅 {{ user.schedule_count }} schedule{{ user.schedule_count|pluralize }}
+            </div>
+            <div class="user-card-actions">
+                <a href="{% url 'user_detail' user.pk %}" class="btn btn-primary btn-sm">View</a>
+                <a href="{% url 'user_edit' user.pk %}" class="btn btn-ghost btn-sm">Edit</a>
+                <a href="{% url 'schedule_add' %}?user={{ user.pk }}" class="btn btn-purple btn-sm">+ Schedule</a>
+                <a href="{% url 'user_delete' user.pk %}" class="btn btn-ghost btn-sm" style="color:var(--red);">Delete</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">👥</div>
+    <div class="empty-state-title">No patients found</div>
+    <div class="empty-state-desc">
+        {% if query %}No results for "{{ query }}". Try a different search.{% else %}Add your first patient to get started.{% endif %}
+    </div>
+    {% if not query %}
+        <a href="{% url 'user_add' %}" class="btn btn-primary" style="margin-top:16px;">Add First Patient</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
